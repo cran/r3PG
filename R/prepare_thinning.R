@@ -50,8 +50,15 @@ prepare_thinning <- function(
     }
 
     thinning = data.frame( thinning )
+
+    # check whether the thinning above/below are within plausible range
+    if( any(thinning[ c("stem","root","foliage") ] < 0 | thinning[ c("stem","root","foliage") ] > 5) ){
+      stop( 'Thinning values for stem, root, foliage shall be in a range [0, 10]' )
+    }
+
     thinning = thinning[thinning$species %in% sp_names, ]
     thinning$species = sp_id[thinning$species] # change sp names to integer
+    thinning = thinning[order(thinning$species, thinning$age),] # order the age of the trees
 
     t_t = as.integer( as.vector( table(thinning[,1]) ) )
     n_man = as.integer( max(t_t) )

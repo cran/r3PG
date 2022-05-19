@@ -31,7 +31,7 @@
 #'
 #'Landsberg, J. J., & Waring, R. H., 1997. A generalised model of forest productivity using simplified concepts of radiation-use efficiency, carbon balance and partitioning. Forest Ecology and Management, 95(3), 209–228. \doi{10.1016/S0378-1127(97)00026-1}
 #'
-#'Sands, P. J., 2010. 3PGpjs user manual. Available at the following web site: \url{http://3pg.sites.olt.ubc.ca/files/2014/04/3PGpjs_UserManual.pdf}
+#'Sands, P. J., 2010. 3PGpjs user manual. Available at the following web site: \url{https://3pg.sites.olt.ubc.ca/files/2014/04/3PGpjs_UserManual.pdf}
 #'
 #' @export
 #'
@@ -162,8 +162,8 @@ transf.out <- function( sim, sp_names, year_i, month_i ){
 
   sim$date <- seq( from = as.Date( paste(year_i, month_i+1, 01, sep = '-') ), by = "month", length.out = n_ob) - 1
   sim$species <- rep(sp_names, each = n_ob)
-  sim$group <- rep( unique(var.default$variable_group), each = n_ob * n_sp)
-  sim$variable <- rep( var.default$variable_name[order(var.default$variable_id)], each = n_ob * n_sp)
+  sim$group <- rep( unique(i_output$variable_group), each = n_ob * n_sp)
+  sim$variable <- rep( i_output$variable_name[order(i_output$variable_id)], each = n_ob * n_sp)
 
   sim <- sim[!is.na(sim$value),]
 
