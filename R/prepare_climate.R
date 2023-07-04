@@ -1,5 +1,5 @@
 #' @title Subsets or replicate a climate data
-#' @description Prepares the climate table, by either replicating the average climate for the required number of years, or by subsetting from a longer time-series of climate data.
+#' @description Prepares the climate table, by either replicating the average climate for the required number of years, or by sub-setting from a longer time-series of climate data.
 #'
 #' @param climate  table containing the information about monthly values for climatic data. If the climate table have exactly 12 rows it will be replicated for the number of years and months specified by \code{from} - \code{to}. Otherwise, it will be subsetted to the selected time period. If this is required, \code{year} and \code{month} columns must be included in the climate table. The minimum required columns are listed below, but additionally you can include: tmp_ave, c02, d13catm. Please refer to \code{\link{d_climate}} for example.
 #' \itemize{
@@ -40,7 +40,7 @@ prepare_climate <- function(
   # make data.frame
   climate = data.frame(climate)
 
-  # Test for the columns consistensy
+  # Test for the columns consistency
   if( !all(c("tmp_min","tmp_max","prcp","srad","frost_days") %in% colnames(climate)) ){
     stop( 'Climate table must include the following columns: tmp_min, tmp_max, prcp, srad, frost_days' )
   }
@@ -95,6 +95,11 @@ prepare_climate <- function(
 
   }
 
+  # Check for the number of frost days to limit
+  daysInMonth <- c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  climate$frost_days <- pmin( climate$frost_days, daysInMonth[climate$month])
+
+
   # Add Average temperature if missing
   if( !'tmp_ave' %in% colnames(climate) ){
     climate$tmp_ave = (climate$tmp_min + climate$tmp_max) / 2
@@ -118,6 +123,8 @@ prepare_climate <- function(
   # Select final table
   climate = climate[,c("year", "month",'tmp_min', 'tmp_max', 'tmp_ave', 'prcp', 'srad', 'frost_days', 'vpd_day', 'co2', 'd13catm')]
 
+  clim_range( climate )
+
   return( climate )
 }
 
@@ -132,4 +139,63 @@ get_vpd <- function(tmin, tmax){
   vpd_day = (vpd_max - vpd_min) / 2
 
   return(vpd_day)
+}
+
+
+clim_range <- function( climate ){
+  # internal function to check whether climate data are within the plausible range
+
+  # Temperature hard limit
+  if( any( max(climate$tmp_min, climate$tmp_max, climate$tmp_ave) > 50,
+           min(climate$tmp_min, climate$tmp_max, climate$tmp_ave) < -50) ){
+    warning( 'Temperature is outside of the limits (-50 - 50 Deg C)!')
+  }
+
+  if( any(climate$tmp_max < climate$tmp_ave) ) {
+    stop( 'Average temperature is greated then Maximum temperature!')
+  }
+
+  if( any(climate$tmp_ave < climate$tmp_min) ) {
+    stop( 'Minimun temperature is greated then Average temperature!')
+  }
+
+
+  # Precipitation
+  if( any( climate$prcp < 0 ) ){
+    stop( 'Precipitation have negative values.')
+  }
+
+  if( any( climate$prcp > 10000 ) ){
+    warning( 'Precipitation is outside of the plausible range (0 - 10000)!')
+  }
+
+
+  # Solar radiation
+  if( any( climate$srad < 0 ) ){
+    stop( 'Solar radiation have negative values.')
+  }
+
+  if( any( climate$srad > 100 ) ){
+    warning( 'Solar radiation is outside of the plausible range (0 - 100)!')
+  }
+
+  # Frost days
+  if( any( climate$frost_days < 0 ) ){
+    stop( 'Frost days have negative values.')
+  }
+
+  if( any( climate$frost_days > 31 ) ){
+    warning( 'Frost days is outside of the plausible range (0 - 31)!')
+  }
+
+
+  # VPD
+  if( any( climate$vpd_day < 0 ) ){
+    stop( 'VPD have negative values.')
+  }
+
+  if( any( climate$vpd_day > 40 ) ){
+    warning( 'VPD is outside of the plausible range (0 - 40)!')
+  }
+
 }
